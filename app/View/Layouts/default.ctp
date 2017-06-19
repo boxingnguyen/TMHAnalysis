@@ -22,7 +22,7 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 <head>
 	<?php echo $this->Html->charset(); ?>
 	<title>
-		<?php $this->assign('title', 'Instagram Analysis | TMH Techlab');?>
+		<?php $this->assign('title', 'Analysis | TMH Techlab');?>
 		<?php echo $this->fetch('title'); ?>
 	</title>
 
@@ -63,7 +63,7 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
         	<?php }elseif (strtolower($this->params['controller']) == 'ranking') {?>
         		<h1>Ranking <?php echo $this->Html->image('/img/icon_ranking.png', array('class' => 'icon-ranking')); ?> </h1>
         	<?php } else {?>
-        		<h1>Instagram Analysis</h1>
+        		<h1>Tribal Analysis</h1>
         	<?php } ?>
     	</header>
 		<div id="content">

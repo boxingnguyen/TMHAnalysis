@@ -200,11 +200,11 @@ class RegisterController extends AppController {
 			$isPrivate = $infor['is_private'];
 
 			$acc = array();
-			$accessToken = '4025731782.6d34b43.643eaa621adf4c2cac062281eec11612';
+			$accessToken = $this->_token;
 
 			if($isPrivate == 'false' || $isPrivate == false){
 				// get media
-				$media = $this->__getMedia($id,$accessToken);
+				$media = $this->__getMedia($id, $accessToken);
 				//save media
 				$this->__saveMediaIntoDb($media, $username);
 			}else {

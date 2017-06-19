@@ -1,4 +1,4 @@
-<?php echo $this->element('switch_top_hashtag'); ?>
+
 <div style = "float:right;display: inline-flex;">
 	<button type="button" class="buttonHead buttonReg" data-toggle="modal" data-target="#myModal">Register</button>
 	
