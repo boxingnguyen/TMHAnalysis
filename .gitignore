@@ -1,2 +1,8 @@
 /.project
 /app/tmp/*
+!/app/tmp/empty
+/app/Vendor/Data/*
+!/app/Vendor/Data/empty
+!/app/Vendor/Data/Hashtag
+/app/Vendor/Hashtag/*
+!/app/Vendor/Hashtag/empty

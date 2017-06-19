@@ -71,7 +71,7 @@ class Instagram
      *
      * @var string[]
      */
-    private $_scopes = array('basic', 'likes', 'comments', 'relationships');
+    private $_scopes = array('basic', 'likes', 'comments', 'relationships', 'public_content','follower_list');
 
     /**
      * Available actions.
@@ -165,7 +165,16 @@ class Instagram
         }
         return $this->_makeCall('users/' . $id, $auth);
     }
-
+    public function getUserFollow($id = 0)
+    {
+    	$auth = false;
+    	if ($id === 0 && isset($this->_accesstoken)) {
+    		$id = 'self';
+    		$auth = true;
+    	}
+//     	echo PHP_EOL.$this->_accesstoken.PHP_EOL;
+    	return $this->_makeCall('users/' . $id, $this->_accesstoken);
+    }
     /**
      * Get user activity feed.
      *
@@ -191,16 +200,17 @@ class Instagram
      *
      * @return mixed
      */
-    public function getUserMedia($id = 'self', $limit = 0)
+    public function getUserMedia($id = 'self', $limit = 0, $max_id = null)
     {
         $params = array();
 
         if ($limit > 0) {
             $params['count'] = $limit;
+            $params['max_id'] = $max_id;
         }
         return $this->_makeCall('users/' . $id . '/media/recent', strlen($this->getAccessToken()), $params);
     }
-
+	
     /**
      * Get the liked photos of a user.
      *
@@ -233,7 +243,6 @@ class Instagram
         if ($limit > 0) {
             $params['count'] = $limit;
         }
-
         return $this->_makeCall('users/' . $id . '/follows', true, $params);
     }
 
@@ -245,14 +254,14 @@ class Instagram
      *
      * @return mixed
      */
-    public function getUserFollower($id = 'self', $limit = 0)
+    public function getUserFollower($cussor = null, $id = 'self', $limit = 50)
     {
         $params = array();
 
         if ($limit > 0) {
             $params['count'] = $limit;
+            $params['cursor'] = $cussor;
         }
-
         return $this->_makeCall('users/' . $id . '/followed-by', true, $params);
     }
 
@@ -587,25 +596,25 @@ class Instagram
             $authMethod = '?access_token=' . $this->getAccessToken();
         }
         
-        
         $paramString = null;
 
         if (isset($params) && is_array($params)) {
             $paramString = '&' . http_build_query($params);
         }
+
         $apiCall = self::API_URL . $function . $authMethod . (('GET' === $method) ? $paramString : null);
+       
         // we want JSON
         $headerData = array('Accept: application/json');
 
         if ($this->_signedheader) {
             $apiCall .= (strstr($apiCall, '?') ? '&' : '?') . 'sig=' . $this->_signHeader($function, $authMethod, $params);
         }
-        print_r($apiCall);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $apiCall);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headerData);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_HEADER, true);
@@ -618,24 +627,47 @@ class Instagram
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
                 break;
         }
-        $jsonData = curl_exec($ch);
-        // split header from JSON data
-        // and assign each to a variable
-        list($headerContent, $jsonData) = explode("\r\n\r\n", $jsonData, 2);
-
-        // convert header content into an array
-        $headers = $this->processHeaders($headerContent);
-
-        // get the 'X-Ratelimit-Remaining' header value
-//         $this->_xRateLimitRemaining = $headers['X-Ratelimit-Remaining'];
-
-        if (!$jsonData) {
-            throw new InstagramException('Error: _makeCall() - cURL error: ' . curl_error($ch));
-        }
-
+        
+        // these lines are from Ducnv
+        $i = 0;
+        do {
+        	if ($i >= 1) {
+        		echo $i . '(Not in json format) Re-get: ' . $apiCall . PHP_EOL;
+        	}
+        	if ($i > 10) {
+        		echo 'Stop get data of ' . $apiCall . PHP_EOL;
+        		break;
+        	}
+        	$jsonData = curl_exec($ch);
+        	list($headerContent, $jsonData) = array_pad(explode("\r\n\r\n", $jsonData, 2), 2, null);
+        
+        	// convert header content into an array
+        	$headers = $this->__processHeaders($headerContent);
+        	$i ++;
+        } while (!$this->isJSON($jsonData));
+        
         curl_close($ch);
-
         return json_decode($jsonData);
+        
+        
+//         $jsonData = curl_exec($ch);
+//         // split header from JSON data
+//         // and assign each to a variable
+//         list($headerContent, $jsonData) = explode("\r\n\r\n", $jsonData, 2);
+
+//         // convert header content into an array
+//         $headers = $this->processHeaders($headerContent);
+
+//         // get the 'X-Ratelimit-Remaining' header value
+// //         $this->_xRateLimitRemaining = $headers['X-Ratelimit-Remaining'];
+
+//         if (!$jsonData) {
+//             throw new InstagramException('Error: _makeCall() - cURL error: ' . curl_error($ch));
+//         }
+
+//         curl_close($ch);
+
+//         return json_decode($jsonData);
     }
 
     /**
@@ -694,8 +726,7 @@ class Instagram
             $baseString .= '|' . $key . '=' . $value;
         }
         $signature = hash_hmac('sha256', $baseString, $this->_apisecret, false);
-//         echo "nhi .... ";
-		echo $signature;
+
         return $signature;
     }
 
@@ -736,7 +767,12 @@ class Instagram
 
         $this->_accesstoken = $token;
     }
-
+    public function setToken($token)
+    {
+//     	$token = is_object($data) ? $data->access_token : $data;
+    
+    	$this->_accesstoken = $token;
+    }
     /**
      * Access Token Getter.
      *
@@ -823,5 +859,29 @@ class Instagram
     public function setSignedHeader($signedHeader)
     {
         $this->_signedheader = $signedHeader;
+    }
+    
+    /**
+     * Check if a string is in JSON format or not
+     * @param string $string
+     */
+    public function isJSON($string){
+    	return is_string($string) && is_array(json_decode($string, true)) && (json_last_error() == JSON_ERROR_NONE) ? true : false;
+    }
+    
+    private function __processHeaders($headerContent) {
+    	$headers = array();
+    
+    	foreach (explode("\r\n", $headerContent) as $i => $line) {
+    		if ($i === 0) {
+    			$headers['http_code'] = $line;
+    			continue;
+    		}
+    
+    		list($key, $value) = explode(':', $line);
+    		$headers[$key] = $value;
+    	}
+    
+    	return $headers;
     }
 }

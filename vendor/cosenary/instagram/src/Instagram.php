@@ -71,7 +71,7 @@ class Instagram {
    *
    * @var array
    */
-  private $_scopes = array('basic', 'likes', 'comments', 'relationships');
+  private $_scopes = array('basic', 'likes', 'comments', 'relationships','follower_list','public_content');
 
   /**
    * Available actions
@@ -558,7 +558,7 @@ class Instagram {
   /**
    * API Secret Setter
    *
-   * @param string $apiSecret 
+   * @param string $apiSecret
    * @return void
    */
   public function setApiSecret($apiSecret) {
@@ -573,7 +573,7 @@ class Instagram {
   public function getApiSecret() {
     return $this->_apisecret;
   }
-  
+
   /**
    * API Callback URL Setter
    *

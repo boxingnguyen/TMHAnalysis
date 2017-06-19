@@ -1,0 +1,27 @@
+root = true
+
+[*]
+end_of_line              = lf
+charset                  = utf-8
+trim_trailing_whitespace = true
+insert_final_newline     = true
+
+[*.sh]
+indent_style = space
+indent_size  = 2
+
+[*.js]
+indent_style = space
+indent_size  = 2
+
+[*.go]
+indent_style = tab
+tab_witdh    = 4
+
+[*.[ch]]
+indent_style = space
+indent_size  = 4
+
+[CMakeLists.txt]
+indent_style = space
+indent_size  = 4
